@@ -272,9 +272,9 @@ ul.clean{margin:0;padding-left:1.2em;display:grid;gap:6px}
       <div class="toggles" style="margin:12px 0 10px">
         <label><input type="checkbox" id="tSem" checked><span class="sw" style="background:var(--region)"></span>语义网格 16×12（每格 32 px）</label>
         <label><input type="checkbox" id="tDet"><span class="sw" style="background:var(--detail)"></span>细节网格 31×25（每格 16 px）</label>
-        <label><input type="checkbox" id="tRoi" checked><span class="sw" style="background:#ffd23f"></span>RoI Align 7×7</label>
+        <label><input type="checkbox" id="tRoi" checked><span class="sw" style="background:#ffd23f"></span>RoI Align 14×14</label>
       </div>
-      <svg class="photo" id="hfrePhoto" viewBox="0 0 500 399" role="img" aria-label="demo 图上叠加所选区域、两种特征网格和 7×7 采样格"></svg>
+      <svg class="photo" id="hfrePhoto" viewBox="0 0 500 399" role="img" aria-label="demo 图上叠加所选区域、两种特征网格和 14×14 采样格"></svg>
     </div>
     <div class="panel">
       <span class="eyebrow">这个框的数据</span>
@@ -287,27 +287,27 @@ ul.clean{margin:0;padding-left:1.2em;display:grid;gap:6px}
       <h3><span class="sw" style="background:var(--region)"></span>语义通路</h3>
       <div class="node" style="--c:var(--region)"><b>主视觉塔 Qwen3.5-VL</b><br>图像先缩放到 32 的倍数（demo：512 × 384），切成 16 px 的 patch，再 2×2 合并 <span class="mono">→ 16 × 12 的特征图</span></div>
       <div class="arrow">↓</div>
-      <div class="node opt" style="--c:var(--region)"><b>SimpleFP 金字塔</b>（由 config 开关）<br>×8 ×4 ×2 ×1 上采样，得到步长 4 / 8 / 16 / 32 的四层，每层 512 通道</div>
+      <div class="node" style="--c:var(--region)"><b>SimpleFP 金字塔</b>（发布配置：开启）<br>×8 ×4 ×2 ×1 上采样，得到步长 4 / 8 / 16 / 32 的四层，每层 512 通道</div>
       <div class="arrow">↓</div>
-      <div class="node" style="--c:var(--region)"><b>RoI Align 7×7 → 平均池化</b><br>框先按 512/500、384/399 缩放到这张图的坐标系</div>
+      <div class="node" style="--c:var(--region)"><b>RoI Align 14×14 → 平均池化</b><br>框先按 512/500、384/399 缩放到这张图的坐标系；四层结果拼接 <span class="mono">→ 4 × 512 = 2048 维</span></div>
     </div>
     <div class="lane" style="--c:var(--detail)">
       <h3><span class="sw" style="background:var(--detail)"></span>细节通路</h3>
       <div class="node" style="--c:var(--detail)"><b>辅助视觉塔 C-RADIOv4-SO400M</b><br>原图直接输入，取整到 16 的倍数（demo：496 × 400），27 层、1152 维 <span class="mono">→ 31 × 25 的特征图</span></div>
       <div class="arrow">↓</div>
-      <div class="node opt" style="--c:var(--detail)"><b>取第 7 / 14 / 20 / 27 层</b>，或只取最后一层进 SimpleFP（×4 ×2 ×1 ×0.5，步长 4 / 8 / 16 / 32，每层 1024 通道）</div>
+      <div class="node" style="--c:var(--detail)"><b>取第 7 / 14 / 20 / 27 层</b>（发布配置不走 SimpleFP）<br>四层都在步长 16 上，按通道拼接 <span class="mono">→ 4 × 1152 = 4608 维</span></div>
       <div class="arrow">↓</div>
-      <div class="node" style="--c:var(--detail)"><b>RoI Align 7×7 → 平均池化</b><br>每层各做一次，结果拼接</div>
+      <div class="node" style="--c:var(--detail)"><b>RoI Align 14×14 → 平均池化</b><br>在拼接后的特征图上做一次，比例 1/16</div>
     </div>
     <div class="merge">
       <div class="arrow">↓ ↓</div>
-      <div class="node"><b>融合</b>：两路取平均（mean）或拼接（concat），具体由 <code>mm_object_feature_combination</code> 决定</div>
-      <div class="node"><b>加位置编码</b>：把框换成归一化的 (cx, cy, w, h)，四个量各生成 1/4 维的正弦编码，加到特征上。这一步让模型知道区域在图里的哪儿、有多大。</div>
-      <div class="node"><b>投影</b>：<code>mm_projector_aux</code>（线性层或带 GELU 的 MLP）映射到语言模型的隐层维度</div>
+      <div class="node"><b>融合</b>：两路拼接（<code>mm_object_feature_combination = concat</code>），2048 + 4608 = 6656 维，等于 <code>mm_object_hidden_size</code></div>
+      <div class="node"><b>加位置编码</b>：把框换成归一化的 (cx, cy, w, h)，四个量各生成 1664 维（6656 的四分之一）的正弦编码，加到特征上。这一步让模型知道区域在图里的哪儿、有多大。</div>
+      <div class="node"><b>投影</b>：<code>mm_projector_aux</code> 是 <code>mlp2x_gelu</code>：6656 → 4096 → 4096，正好是语言模型的隐层维度</div>
       <div class="node last"><b>得到 1 个向量</b>，填进提示词里该区域 <code>&lt;objfeat&gt;</code> 的位置。每个框对应一对 token：<code>&lt;objK&gt;</code> 负责编号，<code>&lt;objfeat&gt;</code> 负责内容。</div>
     </div>
   </div>
-  <p class="callout" style="margin-top:18px">虚线框里的分支在源码里都写了，发布的 10B 权重具体打开哪几个，要看 Hugging Face 上 <code>config.json</code> 里的 <code>mm_use_simpleFPN_for_vt</code>、<code>mm_use_simpleFPN_for_vt_aux</code>、<code>mm_object_feature_combination</code> 等字段。主干逻辑（两路 RoI Align、池化、位置编码、投影）在任何配置下都一样。</p>
+  <p class="callout" style="margin-top:18px">上面每个取值都来自发布权重的 <a href="https://huggingface.co/omlab/VLX-Seek-1.5-10B/blob/main/config.json">config.json</a>。源码里还有别的分支（只用一路、mean 融合、细节通路也走 SimpleFP），默认的 RoI 网格是 7×7，但发布的 10B 用的是 14×14 和上面这套组合。</p>
 </section>
 
 <section id="sequence">
@@ -358,7 +358,7 @@ inputs_embeds[input_ids == 248181] = object_features                     <span c
 <section id="decode">
   <div class="head"><span class="step">第 4 步</span><h2>语言模型只输出编号，worker 再换回坐标</h2><p class="sub">定位变成了在 9 个（最多 100 个）候选里做选择。</p></div>
   <div class="prose stack">
-    <p>语言模型是 Qwen3.5 的文本部分。1.5 版用了更多线性注意力层，以降低推理和显存开销（README：“more Linear Attention layers”；装上 flash-linear-attention 和 causal-conv1d 才走快速内核）。它读完整条序列后，按固定格式生成：</p>
+    <p>语言模型是 Qwen3.5 系的文本模型：32 层，其中 24 层线性注意力、8 层全注意力，隐层 4096（config.json）。线性注意力层用来降低推理和显存开销（README：“more Linear Attention layers”；装上 flash-linear-attention 和 causal-conv1d 才走快速内核）。它读完整条序列后，按固定格式生成：</p>
   </div>
 <pre style="margin-top:14px"><span class="s">&lt;ground&gt;</span>orange<span class="s">&lt;/ground&gt;&lt;objects&gt;</span><span class="k">&lt;obj0&gt;&lt;obj1&gt;&lt;obj2&gt;&lt;obj5&gt;&lt;obj6&gt;</span><span class="s">&lt;/objects&gt;</span>
 
@@ -371,7 +371,7 @@ re.finditer(r"&lt;obj(\d+)&gt;", objects)   →   caller_boxes[K]</pre>
       <li><b>输出的框就是输入的框。</b>模型不改坐标，只做选择，所以框的精度完全取决于候选框本身。</li>
       <li><b>目标不存在时答 None。</b>1.5 版用难负样本训练，并加了显式的 <code>None</code> 格式，让模型在没有匹配区域时拒答，而不是硬选一个框。</li>
     </ul>
-    <p style="margin-top:6px">还有一层编号映射：如果 <code>config.json</code> 里设了 <code>mm_bbox_order_mode</code>，worker 会先给框重新排序再喂给模型（模型训练时见过的顺序），生成后再把 <code>&lt;objK&gt;</code> 换回你传入的编号。选一种排序看 demo 的 9 个框会怎么排：</p>
+    <p style="margin-top:6px">还有一层编号映射：发布的 <code>config.json</code> 设了 <code>mm_bbox_order_mode = raster</code>，所以 worker 会先按 (x1, y1) 给框重新排序再喂给模型（模型训练时见过的顺序），生成后再把 <code>&lt;objK&gt;</code> 换回你传入的编号。选一种排序看 demo 的 9 个框会怎么排：</p>
   </div>
   <div class="seg" role="group" aria-label="排序方式" id="orderSeg" style="margin-top:14px"></div>
   <div class="tbl"><table id="orderTbl"></table></div>
@@ -424,7 +424,7 @@ re.finditer(r"&lt;obj(\d+)&gt;", objects)   →   caller_boxes[K]</pre>
       <li><b>召回上限在候选框。</b>候选框网络漏掉的物体，语言模型没有编号可选；框画得不准，输出也就不准。</li>
       <li><b>最多 100 个区域。</b>场景里物体更多时要分块或换候选策略。</li>
       <li><b>开源版的候选框网络不是博客里的那个。</b>仓库用 WeDetect-Base-Uni 代替内部 OPN，效果可能和博客里的数字不同。</li>
-      <li><b>HFRE 的部分分支由配置决定。</b>上面虚线标出的部分要以发布权重的 <code>config.json</code> 为准。</li>
+      <li><b>效果数字来自作者自己的评测。</b>例如 1.5 博客报告 10B 在 COCO 上 F1@IoU 均值 58.9，在 VisDrone 上幻觉率 FP/GT 为 7.0。</li>
       <li><b>本页的框和答案是示意。</b>框按 demo 图目测放置，选中结果是正确答案而不是实测输出；图像 token 数按 patch 16、2×2 合并推算。</li>
     </ul>
   </div>
@@ -437,6 +437,7 @@ re.finditer(r"&lt;obj(\d+)&gt;", objects)   →   caller_boxes[K]</pre>
     <a href="https://github.com/om-ai-lab/VLX-Seek/blob/main/vlx_seek_worker.py">vlx_seek_worker.py</a>
     <a href="https://github.com/om-ai-lab/VLX-Seek/blob/main/docs/inference.md">docs/inference.md</a>
     <a href="https://huggingface.co/omlab/VLX-Seek-1.5-10B">huggingface.co/omlab/VLX-Seek-1.5-10B</a>
+    <a href="https://huggingface.co/omlab/VLX-Seek-1.5-10B/blob/main/config.json">VLX-Seek-1.5-10B config.json</a>
     <a href="https://om-ai-lab.github.io/2026_07_06_vlx_seek_1_5_en.html">VLX-Seek 1.5 博客</a>
     <a href="https://huggingface.co/blog/omlab/vlx-seek">Hugging Face 博客：VLX-Seek</a>
     <a href="https://x.com/OmAI_lab/status/2097339181500612734">OmAI Lab 在 X 上的实测帖</a>
@@ -627,11 +628,11 @@ re.finditer(r"&lt;obj(\d+)&gt;", objects)   →   caller_boxes[K]</pre>
     if (showS) grid(SEM, "sem", "cellS");
     el("rect", { class: "sel", x: b[0], y: b[1], width: b[2] - b[0], height: b[3] - b[1] }, hLayer);
     if (showR) {
-      const bw = (b[2] - b[0]) / 7, bh = (b[3] - b[1]) / 7;
+      const bw = (b[2] - b[0]) / 14, bh = (b[3] - b[1]) / 14;
       let d = "";
-      for (let k = 1; k < 7; k++) d += `M${fmt(b[0] + k * bw, 1)} ${b[1]}V${b[3]}M${b[0]} ${fmt(b[1] + k * bh, 1)}H${b[2]}`;
+      for (let k = 1; k < 14; k++) d += `M${fmt(b[0] + k * bw, 1)} ${b[1]}V${b[3]}M${b[0]} ${fmt(b[1] + k * bh, 1)}H${b[2]}`;
       el("path", { class: "roi", d }, hLayer);
-      for (let r = 0; r < 7; r++) for (let c = 0; c < 7; c++) el("circle", { class: "roiDot", cx: b[0] + (c + 0.5) * bw, cy: b[1] + (r + 0.5) * bh, r: 1.8 }, hLayer);
+      for (let r = 0; r < 14; r++) for (let c = 0; c < 14; c++) el("circle", { class: "roiDot", cx: b[0] + (c + 0.5) * bw, cy: b[1] + (r + 0.5) * bh, r: 1.1 }, hLayer);
     }
     const sx = SEM.fw / W, sy = SEM.fh / H;
     const vt = [b[0] * sx, b[1] * sy, b[2] * sx, b[3] * sy];
@@ -642,9 +643,9 @@ re.finditer(r"&lt;obj(\d+)&gt;", objects)   →   caller_boxes[K]</pre>
       ["原图像素", `[${b.join(", ")}]`],
       ["语义图坐标", `缩放到 512×384：[${vt.map((v) => fmt(v, 1)).join(", ")}]，÷32 后覆盖 ${cs.c1 - cs.c0 + 1}×${cs.r1 - cs.r0 + 1} = ${cs.n} 格`],
       ["细节图坐标", `÷16 后覆盖 ${cd.c1 - cd.c0 + 1}×${cd.r1 - cd.r0 + 1} = ${cd.n} 格（31×25 的图上）`],
-      ["RoI Align", "框均分成 7×7 个小格，每格双线性采样后取值，再对 49 格求平均：每层得到一个向量"],
+      ["RoI Align", "框均分成 14×14 个小格（mm_roi_output_size = 14），每格双线性采样后取值，再对 196 格求平均：每条通路得到一个向量"],
       ["位置编码输入", `cx ${fmt(cx, 3)} · cy ${fmt(cy, 3)} · w ${fmt(bw, 3)} · h ${fmt(bh, 3)}`],
-      ["结果", `1 个向量 → 替换 <obj${i}> 后面那个 <objfeat> 的嵌入`],
+      ["结果", `两路拼成 6656 维，加位置编码，经 MLP 变成 1 个 4096 维向量 → 替换 <obj${i}> 后面那个 <objfeat> 的嵌入`],
     ];
     const dl = $("facts");
     dl.replaceChildren(...facts.map(([k, v]) => { const row = h("div"); row.append(h("dt", null, k), h("dd", null, v)); return row; }));

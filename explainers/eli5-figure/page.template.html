@@ -1,0 +1,289 @@
+<title>VLX-Seek ELI5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700;900&display=swap">
+<style>
+/* Layout: a learning page in one 720px column; the figure card may run to 820px. Depth tabs switch text in place. */
+:root{
+  --bg:#f5f4f0;--surface:#ffffff;--sunk:#ecebe6;--ink:#1a1a1d;--muted:#5e5e66;--line:#dddcd5;
+  --accent:#1f4fd1;--accent-soft:#e3e9fb;--good:#1d7a57;--good-soft:#dcf1e7;--warm:#a5531c;
+  --display:"Noto Serif SC","Songti SC","STSong",serif;
+  --body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111214;--surface:#191a1d;--sunk:#202226;--ink:#e8e8ea;--muted:#9c9ca6;--line:#2d2f34;
+  --accent:#8aa6ff;--accent-soft:#1f2a4b;--good:#5ccf9f;--good-soft:#173528;--warm:#efa169;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111214;--surface:#191a1d;--sunk:#202226;--ink:#e8e8ea;--muted:#9c9ca6;--line:#2d2f34;
+  --accent:#8aa6ff;--accent-soft:#1f2a4b;--good:#5ccf9f;--good-soft:#173528;--warm:#efa169;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.85 var(--body);padding-inline:18px;padding-block:0 80px;-webkit-font-smoothing:antialiased;font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0}
+.col{max-width:720px;margin:0 auto}
+.wide{max-width:820px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);color:var(--ink);text-wrap:balance;margin:0}
+h1{font-size:clamp(34px,7vw,52px);line-height:1.15;font-weight:900}
+h2{font-size:22px;line-height:1.35;font-weight:700}
+h3{font-size:18px;line-height:1.45;font-weight:700}
+p{margin:0}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:1px 5px;border-radius:3px;word-break:break-word}
+a{color:var(--accent)}
+.crumbs{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+header{padding-block:56px 18px;display:grid;gap:16px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-size:13px;line-height:1;padding:7px 11px;border-radius:999px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
+.pill.good{background:var(--good-soft);color:var(--good);box-shadow:none;font-weight:500}
+.summary{font-family:var(--display);font-size:clamp(21px,3.6vw,27px);line-height:1.6;font-weight:700}
+.summary em{font-style:normal;color:var(--accent)}
+.figure-wrap{margin-top:8px}
+.figure-wrap .iso-figure{margin:16px 0 8px}
+.depth{margin-top:44px;display:grid;gap:22px}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;background:var(--surface);border-radius:12px;padding:6px;box-shadow:inset 0 0 0 1px var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:2}
+.tab{appearance:none;border:0;background:transparent;border-radius:8px;padding:10px 6px;cursor:pointer;color:var(--muted);font:inherit;display:grid;gap:2px;text-align:center}
+.tab b{font-size:15px;color:var(--ink);font-weight:700;line-height:1.3}
+.tab small{font-size:12px;line-height:1.3}
+.tab[aria-selected="true"]{background:var(--accent-soft)}
+.tab[aria-selected="true"] b{color:var(--accent)}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{display:grid;gap:26px}
+.qa{display:grid;gap:8px}
+.qa ul,.qa ol{margin:0;padding-left:1.3em;display:grid;gap:6px}
+.cite{font:500 11px/1 var(--mono);vertical-align:super;text-decoration:none;color:var(--accent);padding:0 1px;margin-left:1px}
+.cite:hover{text-decoration:underline}
+pre{margin:0;background:var(--sunk);border-radius:8px;padding:12px 14px;overflow-x:auto;font:12.5px/1.7 var(--mono);color:var(--ink);max-width:100%}
+.bars{display:grid;gap:10px;background:var(--surface);border-radius:10px;padding:14px 16px;box-shadow:inset 0 0 0 1px var(--line)}
+.bar{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3em;gap:12px;align-items:center;font-size:14px}
+.bar .cells{display:flex;flex-wrap:wrap;gap:2px}
+.bar .cells i{width:7px;height:7px;border-radius:1.5px;background:var(--line)}
+.bar.mine .cells i{background:var(--accent)}
+.bar .n{font:600 15px var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.bar.mine .n{color:var(--accent)}
+.note{font-size:13px;line-height:1.7;color:var(--muted)}
+.careful{border-left:3px solid var(--warm);padding:10px 14px;background:var(--surface);border-radius:0 8px 8px 0;display:grid;gap:6px}
+.careful h3{font-size:16px;color:var(--warm)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.55}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:500;font-size:12.5px}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl{overflow-x:auto}
+section.block{margin-top:56px;display:grid;gap:14px}
+.trail{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.trail li{display:grid;grid-template-columns:2em minmax(0,1fr) auto;gap:4px 10px;align-items:baseline;padding:10px 10px;border-radius:8px;transition:background .6s}
+.trail li:target,.trail li.flash{background:var(--accent-soft)}
+.trail .no{font:600 13px var(--mono);color:var(--muted)}
+.trail a{font-weight:500;text-decoration:none;color:var(--ink)}
+.trail a:hover{text-decoration:underline}
+.trail .site{display:block;font:12px var(--mono);color:var(--muted)}
+.lab{font-size:12px;line-height:1;padding:5px 8px;border-radius:999px;white-space:nowrap}
+.lab.strong{background:var(--good-soft);color:var(--good)}
+.lab.supporting{background:var(--sunk);color:var(--muted)}
+.explore{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.explore>*{background:var(--surface);border-radius:10px;padding:12px 14px;box-shadow:inset 0 0 0 1px var(--line);font-size:15px;line-height:1.55;display:grid;gap:4px}
+.explore small{color:var(--muted);font-size:12.5px}
+.explore a{text-decoration:none;color:var(--ink)}
+.explore a:hover b{color:var(--accent)}
+.takeaway{margin-top:56px;padding:26px 22px;border-radius:14px;background:var(--accent-soft);color:var(--ink);font-family:var(--display);font-size:clamp(20px,3.6vw,26px);line-height:1.55;font-weight:700;text-align:center}
+.takeaway small{display:block;font:500 12px/1 var(--mono);letter-spacing:.08em;color:var(--accent);margin-bottom:12px}
+@media (max-width:560px){
+  .tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .explore{grid-template-columns:minmax(0,1fr)}
+  .bar{grid-template-columns:4.5em minmax(0,1fr) 2.6em}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<div class="col">
+  <header>
+    <div class="crumbs">科技 · AI 模型 · om-ai-lab/VLX-Seek 1.5</div>
+    <h1>VLX-Seek 是怎么在图里找东西的？</h1>
+    <div class="meta"><span class="pill good">来源一致：强</span><span class="pill">9 个来源，8 个一手</span><span class="pill">四档深度</span></div>
+    <p class="summary">VLX-Seek 先在图上给可能有东西的地方<em>贴好号码</em>，再让模型<em>只说是几号</em>，不用自己写出框的坐标。</p>
+  </header>
+</div>
+
+<div class="wide figure-wrap">
+<!--FIGURE-->
+</div>
+
+<div class="col">
+  <div class="depth">
+    <div class="tabs" role="tablist" aria-label="阅读深度">
+      <button class="tab" role="tab" id="t-eli5" aria-controls="p-eli5" aria-selected="true"><b>ELI5</b><small>最简单</small></button>
+      <button class="tab" role="tab" id="t-basic" aria-controls="p-basic" aria-selected="false" tabindex="-1"><b>入门</b><small>多讲一点原理</small></button>
+      <button class="tab" role="tab" id="t-detail" aria-controls="p-detail" aria-selected="false" tabindex="-1"><b>详细</b><small>术语和步骤</small></button>
+      <button class="tab" role="tab" id="t-expert" aria-controls="p-expert" aria-selected="false" tabindex="-1"><b>专家</b><small>参数和取舍</small></button>
+    </div>
+
+    <div class="panel" role="tabpanel" id="p-eli5" aria-labelledby="t-eli5">
+      <div class="qa"><h3>它是用来干什么的？</h3><p>VLX-Seek 是一个会看图的 AI。你问它“橘子在哪？”，它就把图里每个橘子都框出来[1]。</p></div>
+      <div class="qa"><h3>别的 AI 是怎么框的？</h3><p>很多 AI 要自己一口气报出一串数字来画框，比如 <code>165, 11, 289, 125</code>[2]。东西越多，要报的数字越多，报错一个，框就歪了[2]。</p></div>
+      <div class="qa"><h3>VLX-Seek 怎么做？</h3><p>先请一个小帮手在图上可能有东西的地方贴好号码贴纸[1]。VLX-Seek 仔细看看每张贴纸下面是什么，然后只说“0 号、1 号、2 号是橘子”[1][5]。报号码比报一长串数字短得多，所以更快[2][3]。</p>
+        <div class="bars" aria-label="找 5 个橘子时要说多少个字">
+          <div class="bar"><span>报数字</span><span class="cells" data-cells="98"></span><span class="n">98</span></div>
+          <div class="bar mine"><span>报号码</span><span class="cells" data-cells="5"></span><span class="n">5</span></div>
+          <p class="note">示例：在上面那张图里找 5 个橘子时，模型要“说”多少个字（token）。报数字那一行是估算。</p>
+        </div>
+      </div>
+      <div class="qa"><h3>要找的东西不在图里呢？</h3><p>它会说“没有”（None），不会随便指一个[3]。在上面的图里点“梨在哪？”就能看到。</p></div>
+      <div class="qa"><h3>它有做不到的事吗？</h3><p>贴纸是小帮手贴的。小帮手漏贴的东西，VLX-Seek 也选不出来[5][7]。</p></div>
+    </div>
+
+    <div class="panel" role="tabpanel" id="p-basic" aria-labelledby="t-basic" hidden>
+      <div class="qa"><h3>它是用来干什么的？</h3><p>VLX-Seek 是 OM AI Lab 开源的视觉语言模型，也就是能同时看图和读文字的 AI[1]。它专做“精细定位”：东西在哪、你说的是哪一个、有几个、到底有没有[1]。开源的是 10B 版本，约 100 亿个参数[1][4]。</p></div>
+      <div class="qa"><h3>为什么不让它直接写坐标？</h3><p>坐标是框四条边的位置，写成 <code>[x1, y1, x2, y2]</code> 四个数[2]。语言模型擅长写字，写数字容易出错：一个框四个数，十个东西就是几十个数，顺序或格式错一点，结果就用不了[2]。模型是一个 token（模型一次生成的一小段文字）一个 token 地往外写的，要写的越多就越慢[2]。</p></div>
+      <div class="qa"><h3>它是分哪几步找到的？</h3>
+        <ol>
+          <li><b>圈出候选：</b>一个“候选框网络”先在图上圈出最多 100 个可能有东西的地方[1][8]。开源版用的是 WeDetect，官方博客里的那个没有开源[1][7]。</li>
+          <li><b>看清每个候选：</b>两只“眼睛”分别看每个框，一只看“这是什么”，一只看边缘、纹理这些细节，合起来变成一张模型能读的“区域卡片”，叫区域 token[1][6]。</li>
+          <li><b>报编号：</b>模型读完整张图、所有区域卡片和你的问题，只写出要选的编号，比如 <code>&lt;obj0&gt;&lt;obj2&gt;</code>[5]。</li>
+          <li><b>换回框：</b>程序按编号把原来的框找回来交给你[5]。</li>
+        </ol>
+      </div>
+      <div class="qa"><h3>要找的东西不在图里呢？</h3><p>1.5 版专门拿“图里没有这个东西”的例子来训练，并规定这时要明确回答 None[3]。按作者公布的测试，它把不存在的东西框出来的比例比几个对比模型都低[3]。</p></div>
+      <div class="qa"><h3>它有做不到的事吗？</h3><p>它只能从候选框里挑。候选框网络没圈到的东西它选不出来，框画得不准，它也不会去修[5][7]。</p></div>
+    </div>
+
+    <div class="panel" role="tabpanel" id="p-detail" aria-labelledby="t-detail" hidden>
+      <div class="qa"><h3>它由哪几部分组成？</h3><p>VLX-Seek 1.5-10B 由四部分组成：一个 Qwen3.5 系的语言模型；两座视觉塔，分别是 Qwen3.5 的视觉塔和 C-RADIOv4-SO400M；一个把区域变成 token 的 HFRE（Hybrid Fine-Grained Region Encoder）；还有投影层[1][4]。定位从“生成坐标”改成了“检索区域、引用区域”[1][2]。</p></div>
+      <div class="qa"><h3>第 1 步：候选框从哪来？</h3><p>不传框时，<code>inference.py</code> 调用 WeDetect-Base-Uni[8]。它的流程是：先把图缩放补边成 640×640，在 3 层特征上的 8,400 个锚点里和 256 个可学习提示向量打分，做 NMS（IoU 0.7），留下前 100 个框[7]。也可以用 <code>--bbox-list</code> 传你自己的框（原图像素坐标）[8]。模型最多接收 100 个区域 token（<code>mm_num_object_tokens = 100</code>）[4][8]。</p></div>
+      <div class="qa"><h3>第 2 步：一个框怎么变成一个 token？</h3><p>语义通路用 Qwen3.5 的视觉塔：图先缩放到 32 的倍数（demo 的 500×399 会变成 512×384），切成 16 px 的块，再把 2×2 的块合成一个 token，按 patch 16、2×2 合并推算，得到 16×12 = 192 个图像 token[4]。细节通路用 C-RADIOv4-SO400M，分辨率更高[4][6]。每个框在两张特征图上各做一次 RoI Align（按 14×14 的网格在框里采样），取平均，两路拼接，再加上框的中心和宽高 (cx, cy, w, h) 的位置编码，最后经 MLP 变成一个 4096 维向量[4][6]。</p></div>
+      <div class="qa"><h3>第 3 步：模型的输入长什么样？</h3>
+<pre>&lt;|vision_start|&gt;&lt;image&gt;&lt;|vision_end|&gt;
+&lt;obj0&gt;&lt;objfeat&gt;&lt;obj1&gt;&lt;objfeat&gt; … &lt;obj8&gt;&lt;objfeat&gt;
+Detect all the instances of: orange.</pre>
+        <p><code>&lt;image&gt;</code> 会被展开成 192 个 id 为 248056 的图像 token。每个 <code>&lt;objfeat&gt;</code>（id 248181）的嵌入会被换成这个框的 HFRE 向量[5][4]。<code>&lt;objK&gt;</code> 负责编号，<code>&lt;objfeat&gt;</code> 负责内容[5]。</p></div>
+      <div class="qa"><h3>第 4 步：输出怎么变回框？</h3><p>模型输出类似 <code>&lt;ground&gt;orange&lt;/ground&gt;&lt;objects&gt;&lt;obj0&gt;&lt;obj1&gt;&lt;obj2&gt;&lt;obj5&gt;&lt;obj6&gt;&lt;/objects&gt;</code> 的文本。<code>vlx_seek_worker.py</code> 用正则把它拆开，再按编号查回你传入的框[5]。发布的配置会先按 raster 顺序（先比 x1，再比 y1）给框重新编号再送进模型，输出后再映射回你的编号[4][5]。</p></div>
+      <div class="qa"><h3>为什么更快？</h3><p>示例：上面那张图里 5 个橘子的框，每个坐标两三位数。按“数字逐位成 token”估算，写坐标约要 98 个 token，报编号只要 5 个[5]。解码是一个 token 一步，所以定位部分越短，延迟越低[2][3]。</p></div>
+      <div class="careful"><h3>要注意的</h3>
+        <ul>
+          <li>“更快”和“更少幻觉”来自作者自己的测试；98 对 5 是本页按分词规则的估算，没有在真实分词器上数过。</li>
+          <li>召回上限在候选框：漏掉的物体选不到，框也不会被修正[5][7]。</li>
+          <li>开源的候选框网络（WeDetect）不是博客里的内部 OPN，效果可能和博客数字不同[1][8]。</li>
+          <li>本页图里的框是照着 demo 图示意摆放的，选中结果是正确答案，不是一次实测输出。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel" role="tabpanel" id="p-expert" aria-labelledby="t-expert" hidden>
+      <div class="qa"><h3>发布权重的结构参数是什么？</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>部件</th><th>config.json 中的设置</th></tr></thead>
+          <tbody>
+            <tr><td>语言模型</td><td>32 层：24 层 <code>linear_attention</code> + 8 层 <code>full_attention</code>；hidden 4096；vocab 248,182[4]</td></tr>
+            <tr><td>主视觉塔</td><td>Qwen3.5-9B 视觉塔：depth 27、hidden 1152、patch 16、spatial merge 2、输出 4096；<code>mm_projector_type = identity</code>[4]</td></tr>
+            <tr><td>辅视觉塔</td><td><code>c-radio_v4-so400m</code>（27 层、1152 维、patch 16），取第 7 / 14 / 20 / 27 层[4][6]</td></tr>
+            <tr><td>HFRE 语义路</td><td><code>mm_use_simpleFPN_for_vt = True</code>：SimpleFP 在步长 32 的特征上 ×8 ×4 ×2 ×1，得到步长 4 / 8 / 16 / 32 共 4 层，每层 512 通道 → 2048[4][6]</td></tr>
+            <tr><td>HFRE 细节路</td><td><code>mm_use_simpleFPN_for_vt_aux = False</code>：4 个中间层在步长 16 上拼接，4 × 1152 = 4608[4][6]</td></tr>
+            <tr><td>RoI Align</td><td><code>mm_roi_output_size = 14</code>，<code>mm_roi_algined = True</code>，<code>mm_obj_pooling_type = mean</code>[4]</td></tr>
+            <tr><td>融合与投影</td><td><code>concat</code>：2048 + 4608 = 6656 = <code>mm_object_hidden_size</code>；加 (cx, cy, w, h) 正弦位置编码（每个量 1664 维）；<code>mlp2x_gelu</code>：6656 → 4096 → 4096[4][6]</td></tr>
+            <tr><td>特殊 token</td><td><code>&lt;|image_pad|&gt;</code> 248056，<code>&lt;|vision_start|&gt;</code> 248053，<code>&lt;|vision_end|&gt;</code> 248054，<code>&lt;objfeat&gt;</code> 248181[4][5]</td></tr>
+            <tr><td>区域</td><td><code>mm_num_object_tokens = 100</code>；<code>mm_bbox_order_mode = raster</code>，排序键 (x1, y1, 原序号)[4][5]</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="qa"><h3>解码代价差多少？</h3><p>引用一个区域固定 1 个特殊 token。写一个 <code>[x1, y1, x2, y2]</code>：若数字逐位成 token，约为 8 个符号 token 加上全部数字位数，也就是三位数坐标时约 19 个。这是估算，未在 Qwen3.5 分词器上实测[2][5]。官方报告过一次实测：两张 RTX 4090，基于 vLLM 的自定义实现，一张图 30 个目标，端到端 1.81 秒[9]。想走快速路径需要装 flash-linear-attention 和 causal-conv1d[8]。</p></div>
+      <div class="qa"><h3>作者报告的效果</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>基准</th><th>VLX-Seek 1.5-10B</th><th>LocateAnything-3B</th><th>Rex-Omni-3B</th></tr></thead>
+          <tbody>
+            <tr><td>COCO F1@IoU 均值 ↑</td><td class="num">58.9</td><td class="num">54.7</td><td class="num">52.9</td></tr>
+            <tr><td>LVIS F1@IoU 均值 ↑</td><td class="num">58.2</td><td class="num">50.7</td><td class="num">46.9</td></tr>
+            <tr><td>ODinW13 mAP ↑</td><td class="num">50.4</td><td class="num">38.0*</td><td class="num">40.4*</td></tr>
+            <tr><td>幻觉 FP/GT · HumanRef ↓</td><td class="num">12.7</td><td class="num">30.7</td><td class="num">18.4</td></tr>
+            <tr><td>幻觉 FP/GT · VisDrone ↓</td><td class="num">7.0</td><td class="num">28.8</td><td class="num">24.1</td></tr>
+            <tr><td>幻觉 FP/GT · RefDrone ↓</td><td class="num">19.6</td><td class="num">71.3</td><td class="num">66.1</td></tr>
+          </tbody>
+        </table></div>
+        <p class="note">数据来自 1.5 博客的表 1 和表 6[3]。带 * 的是作者用自己的评测脚本、把置信度固定为 1.0 得到的结果。FP/GT 是“不存在却被框出的目标数 ÷ 真实目标数”。</p>
+      </div>
+      <div class="careful"><h3>取舍与限制</h3>
+        <ul>
+          <li>精度上限取决于候选框：没有回归头，只做选择，漏检和框的误差会原样带到结果里[5][7]。</li>
+          <li>区域 token 上限 100 个，密集场景要分块或换候选策略[4][8]。</li>
+          <li>开源版用 WeDetect-Base-Uni 代替内部 OPN[1][8]。</li>
+          <li>效果数字为作者自报，评测脚本和对比设置以原文为准[3]。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <section class="block" aria-labelledby="trail-h">
+    <h2 id="trail-h">来源</h2>
+    <ol class="trail">
+      <li id="src-1"><span class="no">1</span><span><a href="https://github.com/om-ai-lab/VLX-Seek">VLX-Seek README</a><span class="site">github.com/om-ai-lab</span></span><span class="lab strong">一手 · 强</span></li>
+      <li id="src-2"><span class="no">2</span><span><a href="https://huggingface.co/blog/omlab/vlx-seek">VLX-Seek: Improving VLM Fine-Grained Perception via Region Reference Instead of Coordinate Generation</a><span class="site">huggingface.co/blog · 作者团队</span></span><span class="lab strong">一手 · 强</span></li>
+      <li id="src-3"><span class="no">3</span><span><a href="https://om-ai-lab.github.io/2026_07_06_vlx_seek_1_5_en.html">VLX-Seek 1.5: Enhanced Fine-grained Perception for Embodied Scenarios</a><span class="site">om-ai-lab.github.io</span></span><span class="lab strong">一手 · 强</span></li>
+      <li id="src-4"><span class="no">4</span><span><a href="https://huggingface.co/omlab/VLX-Seek-1.5-10B/blob/main/config.json">VLX-Seek-1.5-10B config.json</a><span class="site">huggingface.co/omlab</span></span><span class="lab strong">一手 · 强</span></li>
+      <li id="src-5"><span class="no">5</span><span><a href="https://github.com/om-ai-lab/VLX-Seek/blob/main/vlx_seek_worker.py">vlx_seek_worker.py</a><span class="site">github.com/om-ai-lab · 推理封装</span></span><span class="lab strong">一手 · 强</span></li>
+      <li id="src-6"><span class="no">6</span><span><a href="https://github.com/om-ai-lab/VLX-Seek/tree/main/vlx_seek/models/vlx_seek_1_5">HFRE 与视觉塔源码</a><span class="site">hybrid_finegrained_region_encoder.py · c_radio_v4_aux_encoder.py</span></span><span class="lab strong">一手 · 强</span></li>
+      <li id="src-7"><span class="no">7</span><span><a href="https://github.com/om-ai-lab/VLX-Seek/blob/main/detect_tools/WeDetect/generate_proposal.py">WeDetect 候选框代码 generate_proposal.py</a><span class="site">github.com/om-ai-lab</span></span><span class="lab strong">一手 · 强</span></li>
+      <li id="src-8"><span class="no">8</span><span><a href="https://github.com/om-ai-lab/VLX-Seek/blob/main/docs/inference.md">推理指南 docs/inference.md</a><span class="site">github.com/om-ai-lab</span></span><span class="lab strong">一手 · 强</span></li>
+      <li id="src-9"><span class="no">9</span><span><a href="https://x.com/OmAI_lab/status/2097339181500612734">OmAI Lab：30 个目标端到端 1.81 秒</a><span class="site">x.com</span></span><span class="lab supporting">补充</span></li>
+    </ol>
+  </section>
+
+  <section class="block" aria-labelledby="more-h">
+    <h2 id="more-h">接着问</h2>
+    <div class="explore">
+      <div><b>RoI Align 是怎么从特征图上抠出一块的？</b><small>第 2 步里那个 14×14 的采样网格</small></div>
+      <div><b>为什么语言模型写数字容易出错？</b><small>和分词方式有关</small></div>
+      <div><b>线性注意力为什么更省显存？</b><small>它的 32 层里有 24 层是线性注意力</small></div>
+      <div><b>候选框漏掉东西怎么办？</b><small>换检测器，或自己传 --bbox-list</small></div>
+      <a href="https://claude.ai/artifact/VzHTDLkpiXbqmxyddyAYYM"><b>想看每一步的真实数据 →</b><small>VLX-Seek 拆解：逐步交互讲解</small></a>
+    </div>
+  </section>
+
+  <p class="takeaway"><small>记住这一句</small>先贴号码，再报号码：VLX-Seek 不画框，只说是第几号。</p>
+</div>
+
+<script>
+(() => {
+  // citations: [n] → link to the source trail
+  const walker = document.createTreeWalker(document.querySelector(".depth"), NodeFilter.SHOW_TEXT);
+  const hits = [];
+  while (walker.nextNode()) if (/\[\d+\]/.test(walker.currentNode.nodeValue) && !walker.currentNode.parentElement.closest("pre,code")) hits.push(walker.currentNode);
+  for (const node of hits) {
+    const frag = document.createDocumentFragment();
+    node.nodeValue.split(/(\[\d+\])/).forEach((part) => {
+      const m = part.match(/^\[(\d+)\]$/);
+      if (!m) { if (part) frag.appendChild(document.createTextNode(part)); return; }
+      const a = document.createElement("a");
+      a.className = "cite"; a.href = "#src-" + m[1]; a.textContent = "[" + m[1] + "]";
+      a.setAttribute("aria-label", "来源 " + m[1]);
+      frag.appendChild(a);
+    });
+    node.replaceWith(frag);
+  }
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a.cite");
+    if (!a) return;
+    e.preventDefault();
+    const li = document.querySelector(a.getAttribute("href"));
+    li.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+    li.classList.add("flash");
+    setTimeout(() => li.classList.remove("flash"), 1600);
+  });
+  // token cells
+  document.querySelectorAll("[data-cells]").forEach((el) => el.replaceChildren(...Array.from({ length: Number(el.dataset.cells) }, () => document.createElement("i"))));
+  // depth tabs
+  const tabs = [...document.querySelectorAll(".tab")];
+  const select = (tab, focus) => {
+    tabs.forEach((t) => {
+      const on = t === tab;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) tab.focus();
+    try { localStorage.setItem("vs-eli5-depth", tab.id); } catch (e) {}
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(t));
+    t.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") select(tabs[(i + 1) % tabs.length], true);
+      if (e.key === "ArrowLeft") select(tabs[(i + tabs.length - 1) % tabs.length], true);
+    });
+  });
+  try { const saved = localStorage.getItem("vs-eli5-depth"); const t = saved && document.getElementById(saved); if (t) select(t); } catch (e) {}
+})();
+</script>

@@ -1,0 +1,29 @@
+.iso{--vs-orange:#3b2a1b;--vs-apple:#3a2120;--vs-glass:#1d1c18;--vs-print:#202020}
+.iso[data-theme="light"]{--vs-orange:#f4d5b4;--vs-apple:#f0c6c0;--vs-glass:#f6f3e4;--vs-print:#ffffff}
+.vs-glass{fill:var(--vs-glass);stroke:none}
+.vs-photo>.iso-top{fill:var(--vs-print)}
+.vs-fruit{stroke:none}
+.vs-fruit[data-kind="orange"]{fill:var(--vs-orange)}
+.vs-fruit[data-kind="apple"]{fill:var(--vs-apple)}
+.vs-frame-line{transition:stroke .35s var(--anatomy-ease)}
+.vs-frame[data-hover] .vs-frame-line{stroke:var(--anatomy-hi);stroke-width:1.1px}
+.vs-frame[data-on] .vs-frame-line{stroke:var(--anatomy-lit);stroke-width:1.6px}
+.vs-tab[data-on] .iso-edge,.vs-tab[data-hover] .iso-edge{stroke:var(--anatomy-lit)}
+.vs-tab[data-on] .iso-top{fill:var(--anatomy-lit-top)}
+.vs-key{cursor:pointer}
+.vs-key .vs-cap .iso-edge{transition:stroke .3s var(--anatomy-ease)}
+.vs-key[data-hover] .vs-cap .iso-edge{stroke:var(--anatomy-hi)}
+.vs-key[data-on] .vs-cap .iso-edge{stroke:var(--anatomy-lit)}
+.vs-key[data-on] .vs-cap .iso-top{fill:var(--anatomy-lit-top)}
+.vs-key[data-on] .iso-face-text{fill:var(--anatomy-lit)}
+.vs-card[data-on] .iso-edge{stroke:var(--anatomy-lit)}
+.iso-stage{touch-action:pan-y}
+.iso-stage:focus{outline:none}
+.iso-stage:focus-visible{outline:1px solid var(--anatomy-muted);outline-offset:6px}
+.vs-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.vs-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:20px}
+.vs-chip{appearance:none;border:0;border-radius:0;background:transparent;color:var(--anatomy-text);font:13px/1 ui-sans-serif,system-ui,sans-serif;padding:9px 14px;box-shadow:0 0 0 1px var(--anatomy-lo);cursor:pointer;transition:box-shadow .25s var(--anatomy-ease),color .25s var(--anatomy-ease)}
+.vs-chip:hover{box-shadow:0 0 0 1px var(--anatomy-mid);color:var(--anatomy-strong)}
+.vs-chip[aria-pressed="true"]{box-shadow:0 0 0 1px var(--anatomy-lit);color:var(--anatomy-strong)}
+.vs-chip:focus-visible{outline:1px solid var(--anatomy-muted);outline-offset:3px}
+@media (max-width:560px){.vs-iso .iso-plate{overflow:hidden}.vs-iso .iso-stage .iso-svg{width:118%;margin-left:-9%}}
